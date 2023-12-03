@@ -198,12 +198,9 @@ class CustomLoss(nn.Module):
         return loss.mean()
 
 
-# Plot Loss and mrrmse
 def plot_mrrmse(val_mrrmse):
-    epochs = range(1, len(val_mrrmse) + 1)
-
     plt.figure(figsize=(6, 4))
-    plt.plot(epochs, val_mrrmse, 'r', label='Validation mrrmse')
+    plt.plot(range(1, len(val_mrrmse) + 1), val_mrrmse, 'r', label='Validation mrrmse')
     plt.title('Validation mrrmse')
     plt.xlabel('Epochs')
     plt.ylabel('mrrmse')
@@ -365,15 +362,10 @@ def train_and_evaluate_model(X_train, y_train, X_val, y_val, num_epochs, batch_s
     num_labels = y_train.shape[1]
 
     model = CustomTransformer(num_features, num_labels).to(device)
-    # criterion_mse = nn.MSELoss()
-    # criterion_mae = nn.L1Loss()  # nn.HuberLoss()#  # Mean Absolute Error
+    
     criterion_mae = nn.HuberLoss(reduction='sum')
-    # criterion = CustomLoss()
-    #
-    # weight_decay = 1e-4
-    betas = (0.9, 0.99)
-    # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-    optimizer = Lion(model.parameters(), lr=learning_rate, weight_decay=1e-3, betas=betas)
+    optimizer = Lion(model.parameters(), lr=learning_rate, weight_decay=1e-3, betas=(0.9, 0.99))
+    scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=1000, eta_min=0.0, verbose=True)
 
     val_losses = []
     val_mrrmses = []
@@ -415,18 +407,11 @@ def train_and_evaluate_model(X_train, y_train, X_val, y_val, num_epochs, batch_s
         scheduler.step()
     # Plot validation MRRMSE and loss
     plt.figure(figsize=(12, 6))
-    plt.subplot(1, 2, 1)
-    plt.plot(val_mrrmses, label='Validation MRRMSE')
-    plt.xlabel('Epoch')
-    plt.ylabel('MRRMSE')
-    plt.title('Validation MRRMSE')
-    plt.legend()
-
-    plt.subplot(1, 2, 2)
-    plt.plot(val_losses, label='Validation Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Validation Loss')
-    plt.legend()
-
+    for i, (metric, title) in enumerate(zip([val_mrrmses, val_losses], ['Validation MRRMSE', 'Validation Loss'])):
+        plt.subplot(1, 2, i+1)
+        plt.plot(metric, label=title)
+        plt.xlabel('Epoch')
+        plt.ylabel(title)
+        plt.title(title)
+        plt.legend()
     plt.show()
