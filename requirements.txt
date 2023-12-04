@@ -1,0 +1,17 @@
+IPython
+google
+scipy
+sklearn
+torch_geometric
+tqdm
+transformers
+anndata
+dask
+matplotlib
+networkx
+numpy
+pandas
+scanpy
+tensorflow
+torch
+python==3.7
